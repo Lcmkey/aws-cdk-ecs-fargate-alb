@@ -28,42 +28,63 @@ class FragateStack extends Stack {
     const { prefix, stage } = props;
 
     /**
-     * Cluster Definition
+     * Create Cluster
      */
     const cluster = new Cluster(this, `${prefix}-${stage}-Cluster`, {
       clusterName: `${prefix}-${stage}-Cluster`,
     });
 
+    /**
+     * Create Task Definition
+     */
     const taskDefinition = new FargateTaskDefinition(
       this,
       `${prefix}-${stage}-Task-Def`,
       //   { cpu: 1, memoryLimitMiB: 128 },
     );
 
+    /**
+     * Add Container
+     */
     const container = taskDefinition.addContainer("DefaultContainer", {
       image: ContainerImage.fromAsset("./app"),
       memoryLimitMiB: 512,
       cpu: 256,
     });
 
+    /**
+     * Add Container Port
+     */
     container.addPortMappings({
       containerPort: 3000,
     });
 
+    /**
+     * Create Fragate Services
+     */
     const ecsService = new FargateService(this, "Service", {
       cluster,
       taskDefinition,
       desiredCount: 2,
     });
 
+    /**
+     * Create Load Baranlancer
+     */
     const lb = new ApplicationLoadBalancer(this, "LoadBalancer", {
       loadBalancerName: `${prefix}-${stage}-LoadBalancer`,
       vpc: cluster.vpc,
       internetFacing: true,
     });
 
+    /**
+     * Add Listener
+     */
     const listener = lb.addListener("Listener", { port: 80 });
 
+    /**
+     * Create Target Group
+     */
     const targetGroup = listener.addTargets("ECS", {
       protocol: ApplicationProtocol.HTTP,
       port: 3000,
