@@ -5,7 +5,7 @@ import "source-map-support/register";
 
 import { App } from "@aws-cdk/core";
 
-import { FragateStack } from "./../lib";
+import { VpcStack, EcsStack, ElbStack, VpcEc2NatStack } from "./../lib";
 
 /**
  * AWS Account / Region Definition
@@ -28,22 +28,42 @@ const env = {
 const app = new App();
 
 /**
- * Create Ecs Stack
+ * Vpc Stack
  */
-const ecs = new FragateStack(app, `${prefix}-${stage}-FragateStack`, {
+// const vpc = new VpcStack(app, `${prefix}-${stage}-VpcStack`, {
+//   prefix,
+//   stage,
+// });
+
+/**
+ * Ec2 Nat Instance
+ */
+const vpcEv2Nat = new VpcEc2NatStack(app, `${prefix}-${stage}-Nat-Provider`, {
+  env,
   prefix,
   stage,
+});
+
+/**
+ * Create Ecs Stack
+ */
+const ecs = new EcsStack(app, `${prefix}-${stage}-EcsStack`, {
   env,
+  prefix,
+  stage,
+  vpc: vpcEv2Nat.vpc,
+  // securityGroup: vpc.lbSecurityGroup,
 });
 
 /**
  * Create Elb Stack
  */
-// new ElbStack(app, `${prefix}-${stage}-ElbStack`, {
-//   prefix,
-//   stage,
-//   cluster: ecs.cluster,
-//   ecsService: ecs.ecsService,
-// });
+new ElbStack(app, `${prefix}-${stage}-ElbStack`, {
+  env,
+  prefix,
+  stage,
+  vpc: vpcEv2Nat.vpc,
+  ecsService: ecs.ecsService,
+});
 
 app.synth();

@@ -4,12 +4,16 @@ import {
   ApplicationLoadBalancer,
   ApplicationProtocol,
 } from "@aws-cdk/aws-elasticloadbalancingv2";
+import { Vpc } from "@aws-cdk/aws-ec2";
 
 interface ElbStackProps extends StackProps {
   readonly prefix: string;
   readonly stage: string;
-  readonly cluster: Cluster;
+  // readonly cluster: Cluster;
   readonly ecsService: FargateService;
+  readonly vpc: Vpc;
+  // readonly clusterArn: string;
+  // readonly clusterName: string;
 }
 
 class ElbStack extends Stack {
@@ -19,16 +23,29 @@ class ElbStack extends Stack {
     /**
      * Get var from props
      */
-    const { prefix, stage, cluster, ecsService } = props;
+    const { prefix, stage, vpc, ecsService } = props;
 
+    // const cluster = Cluster.fromClusterAttributes(this, "Cluster", {
+    //   clusterName: clusterName,
+    //   clusterArn: clusterArn,
+    //   vpc: vpc,
+    //   securityGroups: [],
+    // });
+
+    /**
+     * Create Application Load Balancer
+     */
     const lb = new ApplicationLoadBalancer(this, "LoadBalancer", {
       loadBalancerName: `${prefix}-${stage}-LoadBalancer`,
-      vpc: cluster.vpc,
+      vpc: vpc,
       internetFacing: true,
     });
 
     const listener = lb.addListener("Listener", { port: 80 });
 
+    /**
+     * Create Target Group
+     */
     const targetGroup = listener.addTargets("ECS", {
       protocol: ApplicationProtocol.HTTP,
       port: 3000,

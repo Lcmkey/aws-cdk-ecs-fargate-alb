@@ -5,33 +5,32 @@ import {
   ContainerImage,
   FargateService,
 } from "@aws-cdk/aws-ecs";
-import {
-  ApplicationLoadBalancer,
-  ApplicationProtocol,
-} from "@aws-cdk/aws-elasticloadbalancingv2";
+import { Vpc, SecurityGroup } from "@aws-cdk/aws-ec2";
 
-interface FragateStackProps extends StackProps {
+interface EcsStackProps extends StackProps {
   readonly prefix: string;
   readonly stage: string;
+  readonly vpc: Vpc;
+  // readonly securityGroup: SecurityGroup;
 }
 
-class FragateStack extends Stack {
-  public readonly cluster: Cluster;
+class EcsStack extends Stack {
   public readonly ecsService: FargateService;
 
-  constructor(scope: Construct, id: string, props: FragateStackProps) {
+  constructor(scope: Construct, id: string, props: EcsStackProps) {
     super(scope, id, props);
 
     /**
      * Get var from props
      */
-    const { prefix, stage } = props;
+    const { prefix, stage, vpc } = props;
 
     /**
      * Create Cluster
      */
     const cluster = new Cluster(this, `${prefix}-${stage}-Cluster`, {
       clusterName: `${prefix}-${stage}-Cluster`,
+      vpc,
     });
 
     /**
@@ -69,32 +68,8 @@ class FragateStack extends Stack {
     });
 
     /**
-     * Create Load Baranlancer
+     * Assign service to gloabal var
      */
-    const lb = new ApplicationLoadBalancer(this, "LoadBalancer", {
-      loadBalancerName: `${prefix}-${stage}-LoadBalancer`,
-      vpc: cluster.vpc,
-      internetFacing: true,
-    });
-
-    /**
-     * Add Listener
-     */
-    const listener = lb.addListener("Listener", { port: 80 });
-
-    /**
-     * Create Target Group
-     */
-    const targetGroup = listener.addTargets("ECS", {
-      protocol: ApplicationProtocol.HTTP,
-      port: 3000,
-      targets: [ecsService],
-    });
-
-    /**
-     * Assign Certificate Arn to gloabal var
-     */
-    this.cluster = cluster;
     this.ecsService = ecsService;
 
     /**
@@ -108,14 +83,6 @@ class FragateStack extends Stack {
       id: `${prefix}-${stage}-Cluster-Arn`,
       value: cluster.clusterArn,
     });
-    this.createCfnOutput({
-      id: `${prefix}-${stage}-LoadBalancer-DNS`,
-      value: lb.loadBalancerDnsName,
-    });
-    this.createCfnOutput({
-      id: `${prefix}-${stage}-LoadBalancer-Arn`,
-      value: lb.loadBalancerArn,
-    });
   }
 
   /**
@@ -127,4 +94,4 @@ class FragateStack extends Stack {
   }
 }
 
-export { FragateStack };
+export { EcsStack };
