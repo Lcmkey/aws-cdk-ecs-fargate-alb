@@ -1,4 +1,10 @@
-import { Construct, Stack, StackProps, CfnOutput } from "@aws-cdk/core";
+import {
+  Construct,
+  Stack,
+  StackProps,
+  CfnOutput,
+  Duration,
+} from "@aws-cdk/core";
 import { Cluster, FargateService } from "@aws-cdk/aws-ecs";
 import {
   ApplicationLoadBalancer,
@@ -56,7 +62,7 @@ class ElbStack extends Stack {
      * Cfn Ouput
      */
     this.createCfnOutput({
-      id: `${prefix}-${stage}-LoadBalancer-DNS`,
+      id: `${prefix}-${stage}-LoadBalancer-DNS-Name`,
       value: lb.loadBalancerDnsName,
     });
     this.createCfnOutput({

@@ -4,6 +4,7 @@ import {
   FargateTaskDefinition,
   ContainerImage,
   FargateService,
+  Protocol,
 } from "@aws-cdk/aws-ecs";
 import { Vpc, SecurityGroup } from "@aws-cdk/aws-ec2";
 
@@ -56,6 +57,8 @@ class EcsStack extends Stack {
      */
     container.addPortMappings({
       containerPort: 3000,
+      // hostPort: 80,
+      protocol: Protocol.TCP,
     });
 
     /**
