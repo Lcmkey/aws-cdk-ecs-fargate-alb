@@ -1,8 +1,8 @@
 {
-  "name": "aws-cdk-fargate",
+  "name": "aws-cdk-ecs-fargate-alb",
   "version": "0.1.0",
   "bin": {
-    "aws-cdk-fargate": "bin/aws-cdk-fargate.js"
+    "aws-cdk-ecs-fargate-alb": "bin/aws-cdk-ecs-fargate-alb.js"
   },
   "scripts": {
     "build": "tsc",
