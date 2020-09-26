@@ -5,6 +5,7 @@ import {
   ContainerImage,
   FargateService,
   Protocol,
+  AwsLogDriver,
 } from "@aws-cdk/aws-ecs";
 import { Vpc, SecurityGroup } from "@aws-cdk/aws-ec2";
 
@@ -35,6 +36,13 @@ class EcsStack extends Stack {
     });
 
     /**
+     * Create CloudWatch Logs
+     */
+    const logging = new AwsLogDriver({
+      streamPrefix: `${prefix}-${stage}-web-log`,
+    });
+
+    /**
      * Create Task Definition
      */
     const taskDefinition = new FargateTaskDefinition(
@@ -50,6 +58,7 @@ class EcsStack extends Stack {
       image: ContainerImage.fromAsset("./app"),
       memoryLimitMiB: 512,
       cpu: 256,
+      logging,
     });
 
     /**
