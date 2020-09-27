@@ -74,6 +74,7 @@ class EcsStack extends Stack {
      * Create Fragate Services
      */
     const ecsService = new FargateService(this, "Service", {
+      serviceName: `${prefix}-${stage}-Service`,
       cluster,
       taskDefinition,
       desiredCount: 2,

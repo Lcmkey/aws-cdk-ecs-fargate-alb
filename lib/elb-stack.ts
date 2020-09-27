@@ -53,6 +53,7 @@ class ElbStack extends Stack {
      * Create Target Group
      */
     const targetGroup = listener.addTargets("ECS", {
+      targetGroupName: `${prefix}-${stage}-ECS-TG`,
       protocol: ApplicationProtocol.HTTP,
       port: 3000,
       targets: [ecsService],
