@@ -65,8 +65,8 @@ class EcsStack extends Stack {
      * Add Container Port
      */
     container.addPortMappings({
+      hostPort: 3000,
       containerPort: 3000,
-      // hostPort: 80,
       protocol: Protocol.TCP,
     });
 
