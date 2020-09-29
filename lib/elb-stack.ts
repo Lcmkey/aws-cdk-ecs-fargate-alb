@@ -11,12 +11,13 @@ import {
   ApplicationProtocol,
 } from "@aws-cdk/aws-elasticloadbalancingv2";
 import { Vpc } from "@aws-cdk/aws-ec2";
+import { AdjustmentType } from "@aws-cdk/aws-applicationautoscaling";
 
 interface ElbStackProps extends StackProps {
   readonly prefix: string;
   readonly stage: string;
   // readonly cluster: Cluster;
-  readonly ecsService: FargateService;
+  readonly fargateService: FargateService;
   readonly vpc: Vpc;
   // readonly clusterArn: string;
   // readonly clusterName: string;
@@ -29,7 +30,7 @@ class ElbStack extends Stack {
     /**
      * Get var from props
      */
-    const { prefix, stage, vpc, ecsService } = props;
+    const { prefix, stage, vpc, fargateService } = props;
 
     // const cluster = Cluster.fromClusterAttributes(this, "Cluster", {
     //   clusterName: clusterName,
@@ -47,7 +48,7 @@ class ElbStack extends Stack {
       internetFacing: true,
     });
 
-    const listener = lb.addListener("Listener", { port: 80 });
+    const listener = lb.addListener("Listener", { port: 80, open: true });
 
     /**
      * Create Target Group
@@ -56,7 +57,45 @@ class ElbStack extends Stack {
       targetGroupName: `${prefix}-${stage}-ECS-TG`,
       protocol: ApplicationProtocol.HTTP,
       port: 3000,
-      targets: [ecsService],
+      targets: [fargateService],
+      deregistrationDelay: Duration.seconds(0),
+      // include health check (default is none)
+      healthCheck: {
+        interval: Duration.seconds(60),
+        path: "/",
+        timeout: Duration.seconds(5),
+      },
+    });
+
+    /**
+     * Auto Scaling policy
+     */
+    const scaling = fargateService.autoScaleTaskCount({
+      minCapacity: 1,
+      maxCapacity: 5,
+    });
+
+    // scaling.scaleOnCpuUtilization("Cpu-Scaling", {
+    //   targetUtilizationPercent: 50,
+    //   scaleInCooldown: Duration.seconds(60),
+    //   scaleOutCooldown: Duration.seconds(60),
+    // });
+
+    scaling.scaleOnMetric("metric-scaling", {
+      // metric: lb.metricTargetResponseTime(),
+      metric: fargateService.metricCpuUtilization(),
+      scalingSteps: [
+        { upper: 5, change: -1 },
+        { lower: 10, change: +1 },
+        { lower: 20, change: +2 },
+        { lower: 30, change: +3 },
+        { lower: 50, change: +4 },
+      ],
+      /**
+       * Change this to AdjustmentType.PERCENT_CHANGE_IN_CAPACITY to interpret the
+       * 'change' numbers before as percentages instead of capacity counts.
+       */
+      adjustmentType: AdjustmentType.CHANGE_IN_CAPACITY,
     });
 
     /**

@@ -17,7 +17,7 @@ interface EcsStackProps extends StackProps {
 }
 
 class EcsStack extends Stack {
-  public readonly ecsService: FargateService;
+  public readonly fargateService: FargateService;
 
   constructor(scope: Construct, id: string, props: EcsStackProps) {
     super(scope, id, props);
@@ -56,8 +56,8 @@ class EcsStack extends Stack {
      */
     const container = taskDefinition.addContainer("DefaultContainer", {
       image: ContainerImage.fromAsset("./app"),
-      memoryLimitMiB: 512,
-      cpu: 256,
+      memoryLimitMiB: 64,
+      cpu: 64,
       logging,
     });
 
@@ -73,7 +73,7 @@ class EcsStack extends Stack {
     /**
      * Create Fragate Services
      */
-    const ecsService = new FargateService(this, "Service", {
+    const fargateService = new FargateService(this, "Service", {
       serviceName: `${prefix}-${stage}-Service`,
       cluster,
       taskDefinition,
@@ -83,7 +83,7 @@ class EcsStack extends Stack {
     /**
      * Assign service to gloabal var
      */
-    this.ecsService = ecsService;
+    this.fargateService = fargateService;
 
     /**
      * Cfn Ouput

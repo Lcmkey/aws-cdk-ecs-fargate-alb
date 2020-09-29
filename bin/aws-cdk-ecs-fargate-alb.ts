@@ -63,7 +63,7 @@ new ElbStack(app, `${prefix}-${stage}-ElbStack`, {
   prefix,
   stage,
   vpc: vpcEv2Nat.vpc,
-  ecsService: ecs.ecsService,
+  fargateService: ecs.fargateService,
 });
 
 app.synth();
